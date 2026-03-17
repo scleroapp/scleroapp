@@ -1,0 +1,173 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --teal-50:  #e6f4f1;
+  --teal-100: #b3ddd6;
+  --teal-300: #3aaa97;
+  --teal-500: #0f766e;
+  --teal-700: #095e57;
+  --teal-900: #042f2b;
+
+  --slate-50:  #f8faf9;
+  --slate-100: #eef1f0;
+  --slate-200: #dde3e1;
+  --slate-400: #8fa39f;
+  --slate-600: #4a6360;
+  --slate-800: #1e2e2c;
+  --slate-900: #0d1715;
+
+  --amber-50:  #fffbeb;
+  --amber-300: #fbbf24;
+  --amber-500: #d97706;
+  --red-50:    #fef2f2;
+  --red-400:   #f87171;
+  --red-600:   #dc2626;
+  --green-50:  #f0fdf4;
+  --green-500: #22c55e;
+  --green-700: #15803d;
+
+  --font: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+html { font-size: 16px; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: var(--font);
+  background: var(--slate-50);
+  color: var(--slate-800);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  position: relative;
+  background: var(--slate-50);
+}
+
+button { font-family: var(--font); cursor: pointer; border: none; outline: none; }
+input, textarea, select { font-family: var(--font); outline: none; }
+a { text-decoration: none; color: inherit; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--slate-200); border-radius: 4px; }
+
+/* Utilidades comunes */
+.card {
+  background: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--slate-100);
+}
+
+.btn-primary {
+  background: var(--teal-500);
+  color: white;
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  width: 100%;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: var(--teal-700); }
+.btn-primary:active { transform: scale(0.98); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--slate-600);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  font-size: 14px;
+  transition: background 0.15s;
+}
+.btn-ghost:hover { background: var(--slate-100); }
+
+.tag-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1.5px solid var(--slate-200);
+  background: white;
+  color: var(--slate-600);
+  cursor: pointer;
+  transition: all 0.12s;
+  user-select: none;
+}
+.tag-pill.selected {
+  background: var(--teal-500);
+  border-color: var(--teal-500);
+  color: white;
+}
+
+.scale-btn {
+  flex: 1;
+  aspect-ratio: 1;
+  max-width: 36px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1.5px solid var(--slate-200);
+  background: white;
+  color: var(--slate-600);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.scale-btn.selected {
+  border-color: var(--teal-500);
+  background: var(--teal-500);
+  color: white;
+}
+.scale-btn.selected.medium { background: var(--amber-500); border-color: var(--amber-500); }
+.scale-btn.selected.high { background: var(--red-600); border-color: var(--red-600); }
+
+.input-field {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1.5px solid var(--slate-200);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  color: var(--slate-800);
+  background: white;
+  transition: border-color 0.15s;
+}
+.input-field:focus { border-color: var(--teal-500); }
+
+.section-header {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--teal-500);
+  margin-bottom: 10px;
+  margin-top: 4px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.badge-green { background: var(--green-50); color: var(--green-700); }
+.badge-amber { background: var(--amber-50); color: var(--amber-500); }
+.badge-red   { background: var(--red-50);   color: var(--red-600); }
+.badge-teal  { background: var(--teal-50);  color: var(--teal-700); }
+.badge-slate { background: var(--slate-100); color: var(--slate-600); }
