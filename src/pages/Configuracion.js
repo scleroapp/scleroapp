@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { usePerfil } from '../hooks/usePerfil';
 import { hacerBackup, restaurarBackup, exportarExcel } from '../services/backup';
+import { generarReporteTension } from '../services/reportePDF';
 
 function ActionCard({ title, description, buttonLabel, buttonColor, onClick, loading, loadingLabel, icon, warning }) {
   return (
@@ -46,6 +47,8 @@ export default function Configuracion() {
   const [loadingBackup, setLoadingBackup] = useState(false);
   const [loadingRestore, setLoadingRestore] = useState(false);
   const [loadingExcel, setLoadingExcel] = useState(false);
+  const [loadingReport, setLoadingReport] = useState(false);
+  const [fechaReporte, setFechaReporte] = useState('');
   const [msg, setMsg] = useState('');
   const fileRef = useRef();
 
@@ -88,6 +91,19 @@ export default function Configuracion() {
     }
     setLoadingRestore(false);
     fileRef.current.value = '';
+  }
+
+  async function onReporteTension() {
+    if (!fechaReporte) { setMsg('Error: selecciona una fecha de inicio para el reporte.'); return; }
+    setMsg('');
+    setLoadingReport(true);
+    try {
+      const total = await generarReporteTension(user.uid, nombre, fechaReporte);
+      setMsg(`Reporte generado con ${total} registros. Se ha abierto en una nueva ventana — usa Ctrl+P o el menú de impresión para guardarlo como PDF.`);
+    } catch (err) {
+      setMsg('Error: ' + err.message);
+    }
+    setLoadingReport(false);
   }
 
   async function onExcel() {
@@ -165,6 +181,29 @@ export default function Configuracion() {
           loadingLabel="Exportando..."
           icon={<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>}
         />
+
+        <p className="section-header" style={{ marginTop: 8 }}>Informes médicos</p>
+
+        <div className="card" style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--teal-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--teal-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--slate-800)' }}>Informe de tensión arterial</p>
+              <p style={{ fontSize: 12, color: 'var(--slate-400)', marginTop: 3, lineHeight: 1.5 }}>Genera un informe PDF profesional de tus tomas de tensión para compartir con tu médico.</p>
+            </div>
+          </div>
+          <div style={{ marginBottom: 10 }}>
+            <label style={{ fontSize: 12, color: 'var(--slate-500)', display: 'block', marginBottom: 6 }}>Incluir registros desde:</label>
+            <input type="date" className="input-field" value={fechaReporte} onChange={e => setFechaReporte(e.target.value)}
+              style={{ maxWidth: 200 }} />
+          </div>
+          <button onClick={onReporteTension} disabled={loadingReport || !fechaReporte}
+            style={{ width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: fechaReporte ? 'var(--teal-500)' : 'var(--slate-200)', color: fechaReporte ? 'white' : 'var(--slate-400)', border: 'none', cursor: fechaReporte ? 'pointer' : 'default', opacity: loadingReport ? 0.7 : 1 }}>
+            {loadingReport ? 'Generando informe...' : 'Generar informe PDF'}
+          </button>
+        </div>
 
         <ResultMsg msg={msg} />
 

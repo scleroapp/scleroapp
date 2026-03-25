@@ -3,6 +3,7 @@ import { collection, addDoc, query, where, orderBy, getDocs, deleteDoc, doc, ser
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { format, isPast, differenceInDays, parseISO } from 'date-fns';
+import { HospitalSelector } from '../components/HospitalSelector';
 import { es } from 'date-fns/locale';
 
 const ESPECIALIDADES = ['Reumatología', 'Cardiología', 'Neumología', 'Dermatología', 'Nefrología', 'Digestivo', 'Neurología', 'Medicina Interna', 'Fisioterapia', 'Otra'];
@@ -102,7 +103,7 @@ export default function Citas() {
             </div>
             <div>
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Centro / Hospital</label>
-              <input className="input-field" value={form.lugar} onChange={e => setForm({ ...form, lugar: e.target.value })} placeholder="Hospital Valle Verde" />
+              <HospitalSelector value={form.lugar} onChange={v => setForm({ ...form, lugar: v })} />
             </div>
             <div style={{ display: 'flex', gap: 10 }}>
               <div style={{ flex: 1 }}>

@@ -3,6 +3,7 @@ import { collection, addDoc, query, where, orderBy, getDocs, deleteDoc, doc, ser
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { savePDF, getPDF, deletePDF, openPDFInBrowser } from '../services/storage';
+import { HospitalSelector } from '../components/HospitalSelector';
 
 const TIPOS_PRUEBA = ['Analítica de sangre', 'Analítica de orina', 'Radiografía', 'Ecografía', 'TAC', 'RMN', 'Espirometría', 'Ecocardiograma', 'Capilaroscopia', 'Electromiografía', 'Biopsia', 'Prueba de esfuerzo', 'Otra'];
 
@@ -114,7 +115,7 @@ export default function Pruebas() {
             </div>
             <div>
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Centro / Hospital</label>
-              <input className="input-field" value={form.lugar} onChange={e => setForm({ ...form, lugar: e.target.value })} placeholder="Hospital Valle Verde" />
+              <HospitalSelector value={form.lugar} onChange={v => setForm({ ...form, lugar: v })} />
             </div>
             <div>
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Doctor solicitante</label>
