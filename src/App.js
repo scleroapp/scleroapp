@@ -10,6 +10,7 @@ import Citas from './pages/Citas';
 import Pruebas from './pages/Pruebas';
 import Medicacion from './pages/Medicacion';
 import Mas from './pages/Mas';
+import Configuracion from './pages/Configuracion';
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ function AppRoutes() {
         <Route path="/pruebas" element={<ProtectedRoute><Pruebas /></ProtectedRoute>} />
         <Route path="/medicacion" element={<ProtectedRoute><Medicacion /></ProtectedRoute>} />
         <Route path="/mas" element={<ProtectedRoute><Mas /></ProtectedRoute>} />
+        <Route path="/configuracion" element={<ProtectedRoute><Configuracion /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <BottomNav />

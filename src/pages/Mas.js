@@ -7,14 +7,15 @@ export default function Mas() {
   const navigate = useNavigate();
 
   const secciones = [
-    { label: 'Pruebas médicas', sub: 'Analíticas, exploraciones...', to: '/pruebas', color: '#dc2626' },
+    { label: 'Pruebas médicas', sub: 'Analíticas, exploraciones y PDFs', to: '/pruebas', color: '#dc2626' },
     { label: 'Medicación', sub: 'Registro diario de tomas', to: '/medicacion', color: '#0284c7' },
+    { label: 'Configuración', sub: 'Backup, restaurar y exportar datos', to: '/configuracion', color: 'var(--slate-600)' },
   ];
 
   return (
     <div style={{ paddingBottom: 100 }}>
       <div style={{ background: 'var(--slate-800)', padding: '48px 20px 24px' }}>
-        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Más secciones</h1>
+        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Más</h1>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>{user?.email}</p>
       </div>
 
@@ -31,7 +32,7 @@ export default function Mas() {
           </button>
         ))}
 
-        <div style={{ marginTop: 16, padding: '14px 16px' }} className="card">
+        <div style={{ marginTop: 8, padding: '14px 16px' }} className="card">
           <p style={{ fontSize: 12, color: 'var(--slate-400)', marginBottom: 4 }}>Cuenta</p>
           <p style={{ fontSize: 14, color: 'var(--slate-700)', marginBottom: 12 }}>{user?.email}</p>
           <button onClick={logout} style={{ background: 'var(--red-50)', border: '1px solid #fecaca', color: 'var(--red-600)', borderRadius: 8, padding: '10px 16px', fontSize: 14, fontWeight: 500, cursor: 'pointer', width: '100%' }}>
@@ -40,7 +41,7 @@ export default function Mas() {
         </div>
 
         <p style={{ fontSize: 12, color: 'var(--slate-400)', textAlign: 'center', marginTop: 8 }}>
-          Mi Salud · v1.0 · Datos guardados en Firebase
+          Scleroapp · v1.1 · Datos en Firebase · PDFs locales
         </p>
       </div>
     </div>
