@@ -1,3 +1,5 @@
+import React, { useState } from 'react';
+
 export const HOSPITALES = [
   'Hospital Nº Señora de la Candelaria',
   'Hospital Universitario de Canarias',
@@ -9,11 +11,10 @@ export const HOSPITALES = [
   'Otro (especificar)',
 ];
 
-import React, { useState } from 'react';
-
 export function HospitalSelector({ value, onChange, placeholder = 'Seleccionar hospital...' }) {
-  const [otro, setOtro] = useState(!HOSPITALES.includes(value) && value ? true : false);
-  const [otroVal, setOtroVal] = useState(!HOSPITALES.includes(value) ? value || '' : '');
+  const esOtro = value && !HOSPITALES.slice(0, -1).includes(value);
+  const [otro, setOtro] = useState(esOtro);
+  const [otroVal, setOtroVal] = useState(esOtro ? value : '');
 
   function handleSelect(e) {
     const v = e.target.value;
