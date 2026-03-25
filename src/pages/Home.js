@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
+import { usePerfil } from '../hooks/usePerfil';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
@@ -37,6 +38,7 @@ function SectionBtn({ icon, label, sub, to, color }) {
 
 export default function Home() {
   const { user, logout } = useAuth();
+  const { nombre } = usePerfil();
   const navigate = useNavigate();
   const [ultimaTension, setUltimaTension] = useState(null);
   const [cuestionarioHoy, setCuestionarioHoy] = useState({ manana: false, noche: false });
@@ -62,7 +64,8 @@ export default function Home() {
   }, [user, fechaHoy]);
 
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const saludo = hour < 12 ? 'Buenos días' : hour < 20 ? 'Buenas tardes' : 'Buenas noches';
+  const greeting = nombre ? `${saludo}, ${nombre}` : saludo;
 
   return (
     <div style={{ paddingBottom: 90 }}>

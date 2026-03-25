@@ -59,13 +59,13 @@ export default function Medicacion() {
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ background: '#0284c7', padding: '48px 20px 24px' }}>
+      <div style={{ background: 'var(--teal-500)', padding: '48px 20px 24px' }}>
         <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Medicación</h1>
         <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 4 }}>{hoy.length} tomas registradas hoy</p>
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: '#0284c7' }}>
+        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: 'var(--teal-500)' }}>
           {mostrarForm ? 'Cancelar' : '+ Registrar toma'}
         </button>
 
@@ -110,7 +110,7 @@ export default function Medicacion() {
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Notas</label>
               <textarea className="input-field" value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} placeholder="Observaciones..." rows={2} style={{ resize: 'none' }} />
             </div>
-            <button className="btn-primary" type="submit" disabled={guardando || !form.farmaco} style={{ background: '#0284c7' }}>{guardando ? 'Guardando...' : 'Guardar toma'}</button>
+            <button className="btn-primary" type="submit" disabled={guardando || !form.farmaco} style={{ background: 'var(--teal-500)' }}>{guardando ? 'Guardando...' : 'Guardar toma'}</button>
           </form>
         )}
 

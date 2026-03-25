@@ -14,7 +14,7 @@ export default function Mas() {
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ background: 'var(--slate-800)', padding: '48px 20px 24px' }}>
+      <div style={{ background: 'var(--teal-500)', padding: '48px 20px 24px' }}>
         <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Más</h1>
         <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>{user?.email}</p>
       </div>

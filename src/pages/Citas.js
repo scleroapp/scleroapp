@@ -76,13 +76,13 @@ export default function Citas() {
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ background: '#d97706', padding: '48px 20px 24px' }}>
+      <div style={{ background: 'var(--teal-500)', padding: '48px 20px 24px' }}>
         <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Citas médicas</h1>
         <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 4 }}>{proximas.length} próximas · {pasadas.length} pasadas</p>
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: '#d97706' }}>
+        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: 'var(--teal-500)' }}>
           {mostrarForm ? 'Cancelar' : '+ Nueva cita'}
         </button>
 
@@ -122,7 +122,7 @@ export default function Citas() {
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Detalles / Notas</label>
               <textarea className="input-field" value={form.detalles} onChange={e => setForm({ ...form, detalles: e.target.value })} placeholder="Motivo de la consulta, lo que quiero preguntar..." rows={3} style={{ resize: 'none' }} />
             </div>
-            <button className="btn-primary" type="submit" disabled={guardando} style={{ background: '#d97706' }}>{guardando ? 'Guardando...' : 'Guardar cita'}</button>
+            <button className="btn-primary" type="submit" disabled={guardando} style={{ background: 'var(--teal-500)' }}>{guardando ? 'Guardando...' : 'Guardar cita'}</button>
           </form>
         )}
 

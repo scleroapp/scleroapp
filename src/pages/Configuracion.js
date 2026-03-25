@@ -1,12 +1,13 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { usePerfil } from '../hooks/usePerfil';
 import { hacerBackup, restaurarBackup, exportarExcel } from '../services/backup';
 
 function ActionCard({ title, description, buttonLabel, buttonColor, onClick, loading, loadingLabel, icon, warning }) {
   return (
     <div className="card" style={{ padding: '16px' }}>
       <div style={{ display: 'flex', gap: 12, marginBottom: 12 }}>
-        <div style={{ width: 40, height: 40, borderRadius: 10, background: buttonColor + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 10, background: buttonColor + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           {icon}
         </div>
         <div>
@@ -39,11 +40,24 @@ function ResultMsg({ msg }) {
 
 export default function Configuracion() {
   const { user } = useAuth();
+  const { nombre, guardarNombre } = usePerfil();
+  const [nombreEdit, setNombreEdit] = useState('');
+  const [nombreGuardado, setNombreGuardado] = useState(false);
   const [loadingBackup, setLoadingBackup] = useState(false);
   const [loadingRestore, setLoadingRestore] = useState(false);
   const [loadingExcel, setLoadingExcel] = useState(false);
   const [msg, setMsg] = useState('');
   const fileRef = useRef();
+
+  React.useEffect(() => { setNombreEdit(nombre); }, [nombre]);
+
+  async function onGuardarNombre(e) {
+    e.preventDefault();
+    if (!nombreEdit.trim()) return;
+    await guardarNombre(nombreEdit.trim());
+    setNombreGuardado(true);
+    setTimeout(() => setNombreGuardado(false), 2000);
+  }
 
   async function onBackup() {
     setMsg('');
@@ -60,7 +74,7 @@ export default function Configuracion() {
   async function onRestoreFile(e) {
     const file = e.target.files[0];
     if (!file) return;
-    if (!window.confirm('¿Restaurar backup? Se añadirán todos los registros del fichero a tu cuenta actual. Los registros existentes no se borrarán.')) {
+    if (!window.confirm('¿Restaurar backup? Se añadirán todos los registros del fichero. Los registros existentes no se borrarán.')) {
       fileRef.current.value = '';
       return;
     }
@@ -68,7 +82,7 @@ export default function Configuracion() {
     setLoadingRestore(true);
     try {
       const res = await restaurarBackup(user.uid, file);
-      setMsg(`Backup restaurado correctamente. ${res.restaurados} registros y ${res.pdfs} PDFs importados.`);
+      setMsg(`Backup restaurado. ${res.restaurados} registros y ${res.pdfs} PDFs importados.`);
     } catch (err) {
       setMsg('Error al restaurar: ' + err.message);
     }
@@ -90,18 +104,34 @@ export default function Configuracion() {
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ background: 'var(--slate-800)', padding: '48px 20px 24px' }}>
+      <div style={{ background: 'var(--teal-500)', padding: '48px 20px 24px' }}>
         <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Configuración</h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>Backup y exportación de datos</p>
+        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 4 }}>Perfil y copia de seguridad</p>
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
-        <p className="section-header">Copia de seguridad</p>
+        {/* Nombre */}
+        <p className="section-header">Perfil</p>
+        <div className="card" style={{ padding: '16px' }}>
+          <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--slate-800)', marginBottom: 4 }}>Tu nombre</p>
+          <p style={{ fontSize: 12, color: 'var(--slate-400)', marginBottom: 12 }}>Aparecerá en el saludo de la pantalla de inicio.</p>
+          <form onSubmit={onGuardarNombre} style={{ display: 'flex', gap: 8 }}>
+            <input className="input-field" value={nombreEdit} onChange={e => setNombreEdit(e.target.value)}
+              placeholder="Escribe tu nombre..." style={{ flex: 1 }} />
+            <button type="submit"
+              style={{ padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: nombreGuardado ? '#22c55e' : 'var(--teal-500)', color: 'white', border: 'none', cursor: 'pointer', transition: 'background 0.3s', whiteSpace: 'nowrap' }}>
+              {nombreGuardado ? '✓ Guardado' : 'Guardar'}
+            </button>
+          </form>
+        </div>
+
+        {/* Backup */}
+        <p className="section-header" style={{ marginTop: 8 }}>Copia de seguridad</p>
 
         <ActionCard
           title="Hacer backup"
-          description="Descarga un fichero con todos tus datos de Firebase y los PDFs guardados en este dispositivo. Guárdalo en un lugar seguro."
+          description="Descarga un fichero con todos tus datos de Firebase y los PDFs guardados en este dispositivo."
           buttonLabel="Descargar backup"
           buttonColor="var(--teal-500)"
           onClick={onBackup}
@@ -127,7 +157,7 @@ export default function Configuracion() {
 
         <ActionCard
           title="Exportar a CSV"
-          description="Descarga todos tus datos en formato CSV, compatible con Excel y Google Sheets. Ideal para análisis o compartir con tu médico."
+          description="Descarga todos tus datos en formato CSV, compatible con Excel y Google Sheets."
           buttonLabel="Exportar CSV"
           buttonColor="#d97706"
           onClick={onExcel}
@@ -141,7 +171,7 @@ export default function Configuracion() {
         <div className="card" style={{ padding: '14px 16px', marginTop: 8 }}>
           <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--slate-600)', marginBottom: 8 }}>Sobre el almacenamiento local</p>
           <p style={{ fontSize: 12, color: 'var(--slate-400)', lineHeight: 1.6 }}>
-            Los PDFs adjuntos a pruebas médicas se guardan <strong>solo en este dispositivo</strong>, en el almacenamiento interno del navegador (IndexedDB). Nunca se suben a internet. Si cambias de dispositivo o navegador, necesitarás restaurar un backup para recuperarlos.
+            Los PDFs adjuntos a pruebas médicas se guardan <strong>solo en este dispositivo</strong>, en el almacenamiento interno del navegador. Nunca se suben a internet. Si cambias de dispositivo, restaura un backup para recuperarlos.
           </p>
         </div>
 

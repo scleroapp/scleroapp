@@ -1,4 +1,4 @@
-# ScleroApp · Control y Seguimiento
+# Mi Salud · Control de Esclerosis Sistémica
 
 App PWA personal para el seguimiento diario de síntomas, tensión arterial, cuestionarios, citas médicas, pruebas y medicación.
 

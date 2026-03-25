@@ -86,13 +86,13 @@ export default function Pruebas() {
 
   return (
     <div style={{ paddingBottom: 100 }}>
-      <div style={{ background: '#dc2626', padding: '48px 20px 24px' }}>
+      <div style={{ background: 'var(--teal-500)', padding: '48px 20px 24px' }}>
         <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Pruebas médicas</h1>
         <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 14, marginTop: 4 }}>{pruebas.length} registradas</p>
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: '#dc2626' }}>
+        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: 'var(--teal-500)' }}>
           {mostrarForm ? 'Cancelar' : '+ Registrar prueba'}
         </button>
 
@@ -147,7 +147,7 @@ export default function Pruebas() {
               )}
             </div>
 
-            <button className="btn-primary" type="submit" disabled={guardando} style={{ background: '#dc2626' }}>
+            <button className="btn-primary" type="submit" disabled={guardando} style={{ background: 'var(--teal-500)' }}>
               {guardando ? 'Guardando...' : 'Guardar prueba'}
             </button>
           </form>
