@@ -7,23 +7,23 @@ export default function Mas() {
   const navigate = useNavigate();
 
   const secciones = [
-    { label: 'Pruebas médicas', sub: 'Analíticas, exploraciones y PDFs', to: '/pruebas', color: '#dc2626' },
-    { label: 'Medicación', sub: 'Registro diario de tomas', to: '/medicacion', color: '#0284c7' },
-    { label: 'Configuración', sub: 'Backup, restaurar y exportar datos', to: '/configuracion', color: 'var(--slate-600)' },
+    { label: 'Pruebas médicas', sub: 'Analíticas, exploraciones y PDFs', to: '/pruebas' },
+    { label: 'Medicación', sub: 'Registro diario de tomas', to: '/medicacion' },
+    { label: 'Configuración', sub: 'Backup, restaurar y exportar datos', to: '/configuracion' },
   ];
 
   return (
     <div style={{ paddingBottom: 100 }}>
       <div style={{ background: 'var(--teal-500)', padding: '48px 20px 24px' }}>
-        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Más</h1>
-        <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 13, marginTop: 4 }}>{user?.email}</p>
+        <h1 style={{ color: 'white', fontSize: 22, fontWeight: 600 }}>Más secciones</h1>
+        <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: 13, marginTop: 4 }}>{user?.email}</p>
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {secciones.map(s => (
           <button key={s.to} onClick={() => navigate(s.to)} className="card"
             style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', width: '100%', background: 'white', textAlign: 'left', cursor: 'pointer' }}>
-            <div style={{ width: 10, height: 10, borderRadius: '50%', background: s.color, flexShrink: 0 }} />
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--teal-500)', flexShrink: 0 }} />
             <div style={{ flex: 1 }}>
               <p style={{ fontSize: 15, fontWeight: 500, color: 'var(--slate-800)' }}>{s.label}</p>
               <p style={{ fontSize: 12, color: 'var(--slate-400)', marginTop: 2 }}>{s.sub}</p>
@@ -41,7 +41,7 @@ export default function Mas() {
         </div>
 
         <p style={{ fontSize: 12, color: 'var(--slate-400)', textAlign: 'center', marginTop: 8 }}>
-          Scleroapp · v1.1 · Datos en Firebase · PDFs locales
+          Scleroapp · v1.2 · Datos en Firebase · PDFs locales
         </p>
       </div>
     </div>
