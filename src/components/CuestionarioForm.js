@@ -26,7 +26,7 @@ function ScaleInput({ value, onChange }) {
 function OptionsInput({ opciones, value, onChange }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-      {[...opciones, ...opcionesExtra].map(op => (
+      {opciones.map(op => (
         <button type="button" key={op} onClick={() => onChange(op)}
           className={`tag-pill${value === op ? ' selected' : ''}`}>
           {op}
@@ -43,7 +43,7 @@ function MultiSelectInput({ opciones, opcionesExtra = [], value = [], onChange }
   };
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-      {opciones.map(op => (
+      {[...opciones, ...opcionesExtra].map(op => (
         <button type="button" key={op} onClick={() => toggle(op)}
           className={`tag-pill${value.includes(op) ? ' selected' : ''}`}>
           {op}
