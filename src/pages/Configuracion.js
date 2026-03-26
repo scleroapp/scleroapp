@@ -303,6 +303,40 @@ export default function Configuracion() {
           </button>
         </div>
 
+        {/* Fármacos */}
+        <p className="section-header">Fármacos y medicamentos</p>
+        <div className="card" style={{ padding: '16px' }}>
+          <p style={{ fontSize: 12, color: 'var(--slate-400)', marginBottom: 12, lineHeight: 1.5 }}>
+            Gestiona la lista de fármacos que aparece en la sección Medicación. Toca uno para ocultarlo o añade nuevos.
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+            {['Omeprazol','Acxxel','Inmunosupresor','Symbicort','Antihistamínico','Paracetamol','Aciclovir','Curcumina','Metotrexato','Micofenolato','Prednisona','Hidroxicloroquina','Bosentan','Sildenafilo','Nifedipino'].map(f => {
+              const oculto = (opcionesOcultas['farmacos'] || []).includes(f);
+              return (
+                <span key={f} onClick={() => toggleOculta('farmacos', f)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: oculto ? 'var(--slate-100)' : 'var(--teal-50)', border: `1px solid ${oculto ? 'var(--slate-200)' : 'var(--teal-100)'}`, fontSize: 12, color: oculto ? 'var(--slate-400)' : 'var(--teal-700)', cursor: 'pointer', textDecoration: oculto ? 'line-through' : 'none', opacity: oculto ? 0.6 : 1 }}>
+                  {f}
+                </span>
+              );
+            })}
+            {(opcionesExtra['farmacos'] || []).map(f => (
+              <span key={f} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: 'var(--teal-50)', border: '1px solid var(--teal-100)', fontSize: 12, color: 'var(--teal-700)' }}>
+                {f}
+                <button onClick={() => removeOpcion('farmacos', f)} style={{ background: 'none', border: 'none', color: 'var(--teal-500)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 0 0 2px' }}>×</button>
+              </span>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input className="input-field" value={nuevaOpcion} onChange={e => setNuevaOpcion(e.target.value)}
+              placeholder="Añadir nuevo fármaco..." style={{ flex: 1 }}
+              onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addOpcion('farmacos'); } }} />
+            <button onClick={() => addOpcion('farmacos')}
+              style={{ padding: '10px 14px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--teal-500)', color: 'white', border: 'none', cursor: 'pointer', whiteSpace: 'nowrap' }}>
+              + Añadir
+            </button>
+          </div>
+        </div>
+
         {/* Google Drive */}
         <p className="section-header" style={{ marginTop: 8 }}>Google Drive</p>
         <div className="card" style={{ padding: '16px' }}>

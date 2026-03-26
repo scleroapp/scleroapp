@@ -11,7 +11,7 @@ function QuickBtn({ icon, label, to }) {
   const navigate = useNavigate();
   return (
     <button onClick={() => navigate(to)}
-      style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 4px', background: 'white', border: '1px solid var(--teal-100)', borderRadius: 14, cursor: 'pointer', transition: 'transform 0.1s' }}
+      style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, padding: '10px 2px 10px', background: 'transparent', border: 'none', borderRadius: 10, cursor: 'pointer', transition: 'transform 0.1s' }}
       onTouchStart={e => e.currentTarget.style.transform = 'scale(0.95)'}
       onTouchEnd={e => e.currentTarget.style.transform = 'scale(1)'}>
       <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--teal-50)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -117,6 +117,18 @@ export default function Home() {
         <h1 style={{ color: 'white', fontSize: 24, fontWeight: 600 }}>{greeting}</h1>
       </div>
 
+      {/* Accesos rápidos - parte superior */}
+      <div style={{ padding: '12px 16px 0', background: 'white', borderBottom: '1px solid var(--teal-50)' }}>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <QuickBtn to="/tension" label="Tensión" icon={<svg {...i20}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>} />
+          <QuickBtn to="/cuestionarios" label="Diario" icon={<svg {...i20}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>} />
+          <QuickBtn to="/citas" label="Citas" icon={<svg {...i20}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} />
+          <QuickBtn to="/pruebas" label="Pruebas" icon={<svg {...i20}><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m-6 0V9m6 5V9"/></svg>} />
+          <QuickBtn to="/medicacion" label="Medicación" icon={<svg {...i20}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>} />
+          <QuickBtn to="/menstruacion" label="Ciclo" icon={<svg {...i20}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>} />
+        </div>
+      </div>
+
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
         {/* 0. Ciclo menstrual - PRIMERO */}
@@ -198,16 +210,6 @@ export default function Home() {
           </div>
         </SectionCard>
 
-        {/* Accesos rápidos */}
-        <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--teal-500)', marginTop: 4 }}>Accesos rápidos</p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <QuickBtn to="/tension" label="Tensión" icon={<svg {...i20}><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>} />
-          <QuickBtn to="/cuestionarios" label="Diario" icon={<svg {...i20}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>} />
-          <QuickBtn to="/citas" label="Citas" icon={<svg {...i20}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} />
-          <QuickBtn to="/pruebas" label="Pruebas" icon={<svg {...i20}><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m-6 0V9m6 5V9"/></svg>} />
-          <QuickBtn to="/medicacion" label="Medicación" icon={<svg {...i20}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>} />
-          <QuickBtn to="/menstruacion" label="Ciclo" icon={<svg {...i20}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>} />
-        </div>
 
       </div>
     </div>
