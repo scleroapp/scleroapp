@@ -35,6 +35,14 @@ const tabs = [
     )
   },
   {
+    path: '/menstruacion', label: 'Ciclo',
+    icon: (active) => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--teal-500)' : 'var(--slate-400)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>
+      </svg>
+    )
+  },
+  {
     path: '/mas', label: 'Más',
     icon: (active) => (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={active ? 'var(--teal-500)' : 'var(--slate-400)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

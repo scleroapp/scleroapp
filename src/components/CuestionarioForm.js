@@ -4,6 +4,7 @@ import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { format } from 'date-fns';
 import { cuestionarioManana, cuestionarioNoche } from '../data/cuestionarios';
+import { getOpcionesExtra } from '../services/opcionesExtra';
 
 function ScaleInput({ value, onChange }) {
   return (
@@ -25,7 +26,7 @@ function ScaleInput({ value, onChange }) {
 function OptionsInput({ opciones, value, onChange }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
-      {opciones.map(op => (
+      {[...opciones, ...opcionesExtra].map(op => (
         <button type="button" key={op} onClick={() => onChange(op)}
           className={`tag-pill${value === op ? ' selected' : ''}`}>
           {op}
@@ -35,7 +36,7 @@ function OptionsInput({ opciones, value, onChange }) {
   );
 }
 
-function MultiSelectInput({ opciones, value = [], onChange }) {
+function MultiSelectInput({ opciones, opcionesExtra = [], value = [], onChange }) {
   const toggle = (op) => {
     const next = value.includes(op) ? value.filter(v => v !== op) : [...value, op];
     onChange(next);
@@ -60,6 +61,16 @@ export default function CuestionarioForm({ tipo }) {
   const [yaExiste, setYaExiste] = useState(false);
   const fechaHoy = format(new Date(), 'yyyy-MM-dd');
   const preguntas = tipo === 'manana' ? cuestionarioManana : cuestionarioNoche;
+
+  const [opcionesExtra, setOpcionesExtra] = useState({});
+
+  useEffect(() => {
+    async function loadOpciones() {
+      const extras = await getOpcionesExtra(user.uid);
+      setOpcionesExtra(extras);
+    }
+    loadOpciones();
+  }, [user.uid]);
 
   useEffect(() => {
     async function check() {
@@ -119,7 +130,7 @@ export default function CuestionarioForm({ tipo }) {
                 <label style={{ fontSize: 14, fontWeight: 500, color: 'var(--slate-700)' }}>{p.label}</label>
                 {p.tipo === 'scale' && <ScaleInput value={respuestas[p.id]} onChange={v => set(p.id, v)} />}
                 {p.tipo === 'options' && <OptionsInput opciones={p.opciones} value={respuestas[p.id]} onChange={v => set(p.id, v)} />}
-                {p.tipo === 'multiselect' && <MultiSelectInput opciones={p.opciones} value={respuestas[p.id]} onChange={v => set(p.id, v)} />}
+                {p.tipo === 'multiselect' && <MultiSelectInput opciones={p.opciones} opcionesExtra={opcionesExtra[p.id] || []} value={respuestas[p.id]} onChange={v => set(p.id, v)} />}
                 {p.tipo === 'time' && <input type="time" className="input-field" value={respuestas[p.id] || ''} onChange={e => set(p.id, e.target.value)} style={{ marginTop: 8, width: 140 }} />}
                 {p.tipo === 'texto' && <textarea className="input-field" value={respuestas[p.id] || ''} onChange={e => set(p.id, e.target.value)} placeholder={p.placeholder} rows={2} style={{ marginTop: 8, resize: 'none' }} />}
               </div>

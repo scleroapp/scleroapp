@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, orderBy, limit, getDocs } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, getDoc, doc } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { usePerfil } from '../hooks/usePerfil';
-import { format, differenceInDays, parseISO } from 'date-fns';
+import { format, differenceInDays, parseISO, addDays } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 function QuickBtn({ icon, label, to }) {
@@ -45,6 +45,8 @@ export default function Home() {
   const [cuestionarioHoy, setCuestionarioHoy] = useState({ manana: false, noche: false });
   const [proximasCitas, setProximasCitas] = useState([]);
   const [proximasPruebas, setProximasPruebas] = useState([]);
+  const [diasCiclo, setDiasCiclo] = useState(null);
+  const [enPeriodo, setEnPeriodo] = useState(false);
   const fechaHoy = format(new Date(), 'yyyy-MM-dd');
   const hoy = format(new Date(), "EEEE, d 'de' MMMM", { locale: es });
   const hour = new Date().getHours();
@@ -64,9 +66,35 @@ export default function Home() {
         const snapCitas = await getDocs(qCitas);
         setProximasCitas(snapCitas.docs.map(d => ({ id: d.id, ...d.data() })));
 
-        const qPruebas = query(collection(db, 'pruebas'), where('uid', '==', user.uid), where('fecha', '>=', fechaHoy), orderBy('fecha', 'asc'), limit(2));
-        const snapPruebas = await getDocs(qPruebas);
-        setProximasPruebas(snapPruebas.docs.map(d => ({ id: d.id, ...d.data() })));
+        // Pruebas: primero futuras, si no hay suficientes añadir las más recientes
+        const qPruebasFut = query(collection(db, 'pruebas'), where('uid', '==', user.uid), where('fecha', '>=', fechaHoy), orderBy('fecha', 'asc'), limit(2));
+        const snapFut = await getDocs(qPruebasFut);
+        let listaPruebas = snapFut.docs.map(d => ({ id: d.id, ...d.data() }));
+        if (listaPruebas.length < 2) {
+          const qPruebasRec = query(collection(db, 'pruebas'), where('uid', '==', user.uid), orderBy('fecha', 'desc'), limit(2));
+          const snapRec = await getDocs(qPruebasRec);
+          const recientes = snapRec.docs.map(d => ({ id: d.id, ...d.data() }));
+          recientes.forEach(r => { if (!listaPruebas.find(p => p.id === r.id)) listaPruebas.push(r); });
+          listaPruebas = listaPruebas.slice(0, 2);
+        }
+        setProximasPruebas(listaPruebas);
+        // Ciclo menstrual
+        try {
+          const qMens = query(collection(db, 'menstruacion'), where('uid', '==', user.uid), orderBy('fecha_inicio', 'desc'), limit(1));
+          const snapMens = await getDocs(qMens);
+          if (!snapMens.empty) {
+            const ultima = snapMens.docs[0].data();
+            const snapConf = await getDoc(doc(db, 'configuracion', user.uid));
+            const cicloDias = snapConf.exists() && snapConf.data().cicloDias ? snapConf.data().cicloDias : 28;
+            const duracion = snapConf.exists() && snapConf.data().duracionDias ? snapConf.data().duracionDias : 5;
+            const ultimaFecha = parseISO(ultima.fecha_inicio);
+            const proxima = addDays(ultimaFecha, cicloDias);
+            const diff = differenceInDays(proxima, new Date());
+            setDiasCiclo(diff);
+            const finPeriodo = addDays(ultimaFecha, ultima.duracion_real || duracion);
+            setEnPeriodo(differenceInDays(new Date(), ultimaFecha) >= 0 && differenceInDays(finPeriodo, new Date()) > 0);
+          }
+        } catch (e) {}
       } catch (e) {}
     }
     cargar();
@@ -133,6 +161,22 @@ export default function Home() {
           ))}
         </SectionCard>
 
+        {/* Contador ciclo menstrual */}
+        {diasCiclo !== null && (
+          <button onClick={() => navigate('/menstruacion')}
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: enPeriodo ? 'var(--teal-50)' : 'white', border: `1px solid ${enPeriodo ? 'var(--teal-300)' : 'var(--teal-100)'}`, borderRadius: 14, cursor: 'pointer', width: '100%', textAlign: 'left' }}>
+            <div style={{ width: 42, height: 42, borderRadius: 12, background: 'var(--teal-500)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <span style={{ fontSize: 16, fontWeight: 700, color: 'white', lineHeight: 1 }}>{enPeriodo ? '•' : Math.max(0, diasCiclo)}</span>
+              <span style={{ fontSize: 8, color: 'rgba(255,255,255,0.8)', marginTop: 1 }}>{enPeriodo ? 'HOY' : 'DÍAS'}</span>
+            </div>
+            <div>
+              <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--teal-700)' }}>{enPeriodo ? 'Período en curso' : 'Próxima menstruación'}</p>
+              <p style={{ fontSize: 11, color: 'var(--teal-500)', marginTop: 2 }}>{enPeriodo ? 'Pulsa para registrar síntomas' : diasCiclo === 0 ? 'Hoy' : diasCiclo === 1 ? 'Mañana' : `En ${diasCiclo} días`}</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--teal-300)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 'auto', flexShrink: 0 }}><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        )}
+
         {/* 3. Cuestionarios del día */}
         <SectionCard title="Cuestionarios de hoy" to="/cuestionarios"
           icon={<svg {...i16}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}>
@@ -160,6 +204,7 @@ export default function Home() {
           <QuickBtn to="/citas" label="Citas" icon={<svg {...i20}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>} />
           <QuickBtn to="/pruebas" label="Pruebas" icon={<svg {...i20}><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v11m0 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m-6 0V9m6 5V9"/></svg>} />
           <QuickBtn to="/medicacion" label="Medicación" icon={<svg {...i20}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>} />
+          <QuickBtn to="/menstruacion" label="Ciclo" icon={<svg {...i20}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>} />
         </div>
 
       </div>
