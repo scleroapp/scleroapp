@@ -3,7 +3,9 @@ import { collection, addDoc, query, where, orderBy, getDocs, deleteDoc, doc, ser
 import { db } from '../firebase/config';
 import { useAuth } from '../hooks/useAuth';
 import { savePDF, getPDF, deletePDF, openPDFInBrowser } from '../services/storage';
+import { isDriveConnected, uploadPDFToDrive, openDriveFile, deleteDriveFile } from '../services/googleDrive';
 import { HospitalSelector } from '../components/HospitalSelector';
+import { format } from 'date-fns';
 
 const TIPOS_PRUEBA = ['Analítica de sangre', 'Analítica de orina', 'Radiografía', 'Ecografía', 'TAC', 'RMN', 'Espirometría', 'Ecocardiograma', 'Capilaroscopia', 'Electromiografía', 'Biopsia', 'Prueba de esfuerzo', 'Otra'];
 
@@ -15,6 +17,7 @@ export default function Pruebas() {
   const [guardando, setGuardando] = useState(false);
   const [pdfLocal, setPdfLocal] = useState(null);
   const [abriendo, setAbriendo] = useState(null);
+  const [driveConectado] = useState(() => isDriveConnected());
   const fileRef = useRef();
   const [form, setForm] = useState({ tipo: '', fecha: '', lugar: '', doctor_solicitante: '', resultado: '', notas: '' });
 
@@ -41,49 +44,53 @@ export default function Pruebas() {
     e.preventDefault();
     setGuardando(true);
     try {
-      let pdfId = null;
-      let pdfNombre = null;
+      let pdfData = {};
       if (pdfLocal) {
-        pdfId = `prueba_${user.uid}_${Date.now()}`;
-        pdfNombre = pdfLocal.name;
         const buffer = await pdfLocal.arrayBuffer();
-        await savePDF(pdfId, pdfNombre, buffer);
+        if (driveConectado) {
+          const driveFile = await uploadPDFToDrive(pdfLocal.name, buffer);
+          pdfData = { pdf_drive_id: driveFile.id, pdf_nombre: driveFile.name, pdf_origen: 'drive' };
+        } else {
+          const pdfId = `prueba_${user.uid}_${Date.now()}`;
+          await savePDF(pdfId, pdfLocal.name, buffer);
+          pdfData = { pdf_id: pdfId, pdf_nombre: pdfLocal.name, pdf_origen: 'local' };
+        }
       }
       await addDoc(collection(db, 'pruebas'), {
-        uid: user.uid, ...form,
-        pdf_id: pdfId,
-        pdf_nombre: pdfNombre,
-        timestamp: serverTimestamp()
+        uid: user.uid, ...form, ...pdfData, timestamp: serverTimestamp()
       });
       setForm({ tipo: '', fecha: '', lugar: '', doctor_solicitante: '', resultado: '', notas: '' });
       setPdfLocal(null);
       if (fileRef.current) fileRef.current.value = '';
       setMostrarForm(false);
       cargar();
-    } catch (err) {
-      alert('Error al guardar: ' + err.message);
-    }
+    } catch (err) { alert('Error al guardar: ' + err.message); }
     setGuardando(false);
   }
 
   async function eliminar(prueba) {
     if (!window.confirm('¿Eliminar esta prueba?')) return;
-    if (prueba.pdf_id) await deletePDF(prueba.pdf_id);
+    if (prueba.pdf_origen === 'local' && prueba.pdf_id) await deletePDF(prueba.pdf_id);
+    if (prueba.pdf_origen === 'drive' && prueba.pdf_drive_id) await deleteDriveFile(prueba.pdf_drive_id);
     await deleteDoc(doc(db, 'pruebas', prueba.id));
     cargar();
   }
 
-  async function abrirPDF(pdfId, nombre) {
-    setAbriendo(pdfId);
+  async function abrirPDF(prueba) {
+    setAbriendo(prueba.id);
     try {
-      const stored = await getPDF(pdfId);
-      if (!stored) { alert('PDF no encontrado en este dispositivo. El PDF solo está disponible en el dispositivo donde se guardó.'); return; }
-      openPDFInBrowser(stored.data, nombre);
-    } catch (err) {
-      alert('Error al abrir el PDF');
-    }
+      if (prueba.pdf_origen === 'drive') {
+        openDriveFile(prueba.pdf_drive_id);
+      } else {
+        const stored = await getPDF(prueba.pdf_id);
+        if (!stored) { alert('PDF no encontrado en este dispositivo. El PDF solo está disponible en el dispositivo donde se guardó.'); return; }
+        openPDFInBrowser(stored.data, prueba.pdf_nombre);
+      }
+    } catch (err) { alert('Error al abrir el PDF'); }
     setAbriendo(null);
   }
+
+  const tienePDF = (p) => p.pdf_id || p.pdf_drive_id;
 
   return (
     <div style={{ paddingBottom: 100 }}>
@@ -93,7 +100,17 @@ export default function Pruebas() {
       </div>
 
       <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)} style={{ background: 'var(--teal-500)' }}>
+
+        {/* Estado Drive */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: driveConectado ? 'var(--teal-50)' : 'var(--slate-50)', border: `1px solid ${driveConectado ? 'var(--teal-100)' : 'var(--slate-200)'}`, borderRadius: 10 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: driveConectado ? 'var(--teal-500)' : 'var(--slate-300)', flexShrink: 0 }} />
+          <p style={{ fontSize: 12, color: driveConectado ? 'var(--teal-700)' : 'var(--slate-500)', flex: 1 }}>
+            {driveConectado ? 'PDFs se guardan en Google Drive' : 'PDFs se guardan en este dispositivo'}
+          </p>
+          {!driveConectado && <span style={{ fontSize: 11, color: 'var(--slate-400)' }}>Conecta en Configuración</span>}
+        </div>
+
+        <button className="btn-primary" onClick={() => setMostrarForm(!mostrarForm)}>
           {mostrarForm ? 'Cancelar' : '+ Registrar prueba'}
         </button>
 
@@ -107,11 +124,9 @@ export default function Pruebas() {
                 {TIPOS_PRUEBA.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <div style={{ flex: 1 }}>
-                <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Fecha</label>
-                <input className="input-field" type="date" value={form.fecha} onChange={e => setForm({ ...form, fecha: e.target.value })} required />
-              </div>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Fecha</label>
+              <input className="input-field" type="date" value={form.fecha} onChange={e => setForm({ ...form, fecha: e.target.value })} required />
             </div>
             <div>
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Centro / Hospital</label>
@@ -127,29 +142,26 @@ export default function Pruebas() {
             </div>
             <div>
               <label style={{ fontSize: 12, color: 'var(--slate-400)', display: 'block', marginBottom: 5 }}>Notas adicionales</label>
-              <textarea className="input-field" value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} placeholder="Observaciones, indicaciones del médico..." rows={2} style={{ resize: 'none' }} />
+              <textarea className="input-field" value={form.notas} onChange={e => setForm({ ...form, notas: e.target.value })} placeholder="Observaciones..." rows={2} style={{ resize: 'none' }} />
             </div>
 
-            {/* PDF adjunto */}
-            <div style={{ background: 'var(--slate-50)', border: '1.5px dashed var(--slate-200)', borderRadius: 10, padding: 14 }}>
-              <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--slate-700)', marginBottom: 6 }}>Adjuntar PDF (opcional)</p>
-              <p style={{ fontSize: 11, color: 'var(--slate-400)', marginBottom: 10, lineHeight: 1.5 }}>
-                El PDF se guardará solo en este dispositivo, nunca se sube a internet.
+            <div style={{ background: 'var(--teal-50)', border: '1.5px dashed var(--teal-300)', borderRadius: 10, padding: 14 }}>
+              <p style={{ fontSize: 13, fontWeight: 500, color: 'var(--teal-700)', marginBottom: 4 }}>Adjuntar PDF (opcional)</p>
+              <p style={{ fontSize: 11, color: 'var(--teal-500)', marginBottom: 10 }}>
+                {driveConectado ? 'Se guardará en tu Google Drive · carpeta ScleroApp' : 'Se guardará solo en este dispositivo'}
               </p>
-              <input ref={fileRef} type="file" accept="application/pdf" onChange={onFileChange}
-                style={{ fontSize: 13, color: 'var(--slate-600)', width: '100%' }} />
+              <input ref={fileRef} type="file" accept="application/pdf" onChange={onFileChange} style={{ fontSize: 13, color: 'var(--slate-600)', width: '100%' }} />
               {pdfLocal && (
-                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, background: '#EAF3DE', borderRadius: 8, padding: '8px 12px' }}>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3B6D11" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                  <span style={{ fontSize: 12, color: '#27500A', flex: 1 }}>{pdfLocal.name}</span>
-                  <button type="button" onClick={() => { setPdfLocal(null); if(fileRef.current) fileRef.current.value=''; }}
-                    style={{ background: 'none', border: 'none', color: '#3B6D11', cursor: 'pointer', fontSize: 16 }}>×</button>
+                <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8, background: 'var(--teal-50)', border: '1px solid var(--teal-100)', borderRadius: 8, padding: '8px 12px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal-500)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span style={{ fontSize: 12, color: 'var(--teal-700)', flex: 1 }}>{pdfLocal.name}</span>
+                  <button type="button" onClick={() => { setPdfLocal(null); if (fileRef.current) fileRef.current.value = ''; }} style={{ background: 'none', border: 'none', color: 'var(--teal-500)', cursor: 'pointer', fontSize: 16 }}>×</button>
                 </div>
               )}
             </div>
 
-            <button className="btn-primary" type="submit" disabled={guardando} style={{ background: 'var(--teal-500)' }}>
-              {guardando ? 'Guardando...' : 'Guardar prueba'}
+            <button className="btn-primary" type="submit" disabled={guardando}>
+              {guardando ? (driveConectado ? 'Subiendo a Drive...' : 'Guardando...') : 'Guardar prueba'}
             </button>
           </form>
         )}
@@ -163,7 +175,7 @@ export default function Pruebas() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {pruebas.map(p => (
-            <div key={p.id} className="card" style={{ padding: '14px 16px', borderLeft: '3px solid #dc2626' }}>
+            <div key={p.id} className="card" style={{ padding: '14px 16px', borderLeft: '3px solid var(--teal-500)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--slate-800)' }}>{p.tipo}</p>
@@ -172,13 +184,12 @@ export default function Pruebas() {
                   </p>
                   {p.resultado && <p style={{ fontSize: 13, color: 'var(--slate-600)', marginTop: 8, paddingTop: 8, borderTop: '1px solid var(--slate-100)' }}>{p.resultado}</p>}
                   {p.notas && <p style={{ fontSize: 12, color: 'var(--slate-500)', marginTop: 4, fontStyle: 'italic' }}>{p.notas}</p>}
-
-                  {p.pdf_id && (
-                    <button onClick={() => abrirPDF(p.pdf_id, p.pdf_nombre)}
-                      disabled={abriendo === p.pdf_id}
-                      style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, background: '#FCEBEB', border: '1px solid #fca5a5', borderRadius: 8, padding: '7px 12px', cursor: 'pointer', color: '#dc2626', fontSize: 12, fontWeight: 500 }}>
+                  {tienePDF(p) && (
+                    <button onClick={() => abrirPDF(p)} disabled={abriendo === p.id}
+                      style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 6, background: 'var(--teal-50)', border: '1px solid var(--teal-100)', borderRadius: 8, padding: '7px 12px', cursor: 'pointer', color: 'var(--teal-700)', fontSize: 12, fontWeight: 500 }}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                      {abriendo === p.pdf_id ? 'Abriendo...' : p.pdf_nombre || 'Ver PDF'}
+                      {abriendo === p.id ? 'Abriendo...' : p.pdf_nombre || 'Ver PDF'}
+                      {p.pdf_origen === 'drive' && <span style={{ fontSize: 10, color: 'var(--teal-500)', marginLeft: 2 }}>· Drive</span>}
                     </button>
                   )}
                 </div>

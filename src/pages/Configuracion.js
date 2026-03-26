@@ -6,6 +6,7 @@ import { usePerfil } from '../hooks/usePerfil';
 import { hacerBackup, restaurarBackup, exportarExcel } from '../services/backup';
 import { generarReporteTension } from '../services/reportePDF';
 import { getOpcionesExtra, saveOpcionesExtra, PREGUNTAS_AMPLIABLES } from '../services/opcionesExtra';
+import { isDriveConnected, connectDrive, clearDriveToken } from '../services/googleDrive';
 
 function ActionCard({ title, description, buttonLabel, buttonColor, onClick, loading, loadingLabel, icon, warning }) {
   return (
@@ -49,6 +50,8 @@ export default function Configuracion() {
   const [opcionesExtra, setOpcionesExtra] = useState({});
   const [preguntaActiva, setPreguntaActiva] = useState(null);
   const [nuevaOpcion, setNuevaOpcion] = useState('');
+  const [driveConectado, setDriveConectado] = useState(() => isDriveConnected());
+  const [loadingDrive, setLoadingDrive] = useState(false);
   const [loadingBackup, setLoadingBackup] = useState(false);
   const [loadingRestore, setLoadingRestore] = useState(false);
   const [loadingExcel, setLoadingExcel] = useState(false);
@@ -103,6 +106,25 @@ export default function Configuracion() {
     const updated = { ...opcionesExtra, [preguntaId]: (opcionesExtra[preguntaId] || []).filter(o => o !== opcion) };
     setOpcionesExtra(updated);
     saveOpcionesExtra(user.uid, updated);
+  }
+
+  async function onConectarDrive() {
+    setLoadingDrive(true);
+    setMsg('');
+    try {
+      await connectDrive();
+      setDriveConectado(true);
+      setMsg('Google Drive conectado correctamente. Los nuevos PDFs se guardarán en tu Drive.');
+    } catch (err) {
+      setMsg('Error al conectar Drive: ' + err.message);
+    }
+    setLoadingDrive(false);
+  }
+
+  function onDesconectarDrive() {
+    clearDriveToken();
+    setDriveConectado(false);
+    setMsg('Google Drive desconectado. Los PDFs se guardarán en este dispositivo.');
   }
 
   async function onBackup() {
@@ -254,6 +276,46 @@ export default function Configuracion() {
             style={{ width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: fechaReporte ? 'var(--teal-500)' : 'var(--slate-200)', color: fechaReporte ? 'white' : 'var(--slate-400)', border: 'none', cursor: fechaReporte ? 'pointer' : 'default', opacity: loadingReport ? 0.7 : 1 }}>
             {loadingReport ? 'Generando informe...' : 'Generar informe PDF'}
           </button>
+        </div>
+
+        {/* Google Drive */}
+        <p className="section-header" style={{ marginTop: 8 }}>Google Drive</p>
+        <div className="card" style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--teal-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <svg width="22" height="22" viewBox="0 0 87.3 78" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3L26.95 56H0c0 1.55.4 3.1 1.2 4.5l5.4 6.35z" fill="#0F9D58"/>
+                <path d="M43.65 24.15L30.45 0c-1.35.8-2.5 1.9-3.3 3.3L1.2 51.5C.4 52.9 0 54.45 0 56h26.95l16.7-31.85z" fill="#00832D"/>
+                <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5H60.35l5.9 11.5 7.3 12.3z" fill="#EA4335"/>
+                <path d="M43.65 24.15L56.85 0H30.45l-13.2 24.15L43.65 24.15z" fill="#00AC47"/>
+                <path d="M60.35 56H26.95L13.75 79.8h46.6l13.2-23.8H60.35z" fill="#00832D" opacity=".3"/>
+                <path d="M60.35 56l16.7-31.85c-1.35-.8-2.9-1.2-4.5-1.2H29.5c-1.6 0-3.15.4-4.5 1.2L43.65 56H60.35z" fill="#FFBA00"/>
+              </svg>
+            </div>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--slate-800)' }}>Google Drive</p>
+              <p style={{ fontSize: 12, color: 'var(--slate-400)', marginTop: 3, lineHeight: 1.5 }}>
+                {driveConectado ? 'Conectado · Los PDFs de pruebas se guardan en tu Drive' : 'Conecta tu cuenta para guardar los PDFs en Google Drive'}
+              </p>
+            </div>
+          </div>
+          {driveConectado ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', background: 'var(--teal-50)', borderRadius: 8, border: '1px solid var(--teal-100)' }}>
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--teal-500)' }} />
+                <span style={{ fontSize: 12, color: 'var(--teal-700)', flex: 1 }}>Carpeta: ScleroApp - Pruebas Médicas</span>
+              </div>
+              <button onClick={onDesconectarDrive}
+                style={{ width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--red-50)', color: 'var(--red-600)', border: '1px solid #fca5a5', cursor: 'pointer' }}>
+                Desconectar Drive
+              </button>
+            </div>
+          ) : (
+            <button onClick={onConectarDrive} disabled={loadingDrive}
+              style={{ width: '100%', padding: '10px', borderRadius: 8, fontSize: 13, fontWeight: 500, background: 'var(--teal-500)', color: 'white', border: 'none', cursor: 'pointer', opacity: loadingDrive ? 0.7 : 1 }}>
+              {loadingDrive ? 'Conectando...' : 'Conectar con Google Drive'}
+            </button>
+          )}
         </div>
 
         {/* Backup */}
