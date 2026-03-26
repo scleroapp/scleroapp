@@ -184,6 +184,12 @@ export const cuestionarioNoche = [
     ]
   },
   {
+    seccion: "Infusiones",
+    preguntas: [
+      { id: "infusiones_tomadas", label: "Infusiones consumidas hoy", tipo: "multiselect", opciones: ["No", "Manzanilla", "Jengibre", "Menta", "Tila", "Valeriana", "Rooibos", "Verde", "Otra"] },
+    ]
+  },
+  {
     seccion: "Reflexión del día",
     preguntas: [
       { id: "empeoro_sintomas", label: "Algo que empeoró mis síntomas hoy", tipo: "texto", placeholder: "Opcional..." },

@@ -5,7 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { usePerfil } from '../hooks/usePerfil';
 import { hacerBackup, restaurarBackup, exportarExcel } from '../services/backup';
 import { generarReporteTension } from '../services/reportePDF';
-import { getOpcionesExtra, saveOpcionesExtra, PREGUNTAS_AMPLIABLES } from '../services/opcionesExtra';
+import { getOpcionesConfig, saveOpcionesExtra, saveOpcionesOcultas, PREGUNTAS_AMPLIABLES } from '../services/opcionesExtra';
 import { isDriveConnected, connectDrive, clearDriveToken } from '../services/googleDrive';
 
 function ActionCard({ title, description, buttonLabel, buttonColor, onClick, loading, loadingLabel, icon, warning }) {
@@ -48,6 +48,7 @@ export default function Configuracion() {
   const [duracionDias, setDuracionDias] = useState(5);
   const [cicloGuardado, setCicloGuardado] = useState(false);
   const [opcionesExtra, setOpcionesExtra] = useState({});
+  const [opcionesOcultas, setOpcionesOcultas] = useState({});
   const [preguntaActiva, setPreguntaActiva] = useState(null);
   const [nuevaOpcion, setNuevaOpcion] = useState('');
   const [driveConectado, setDriveConectado] = useState(() => isDriveConnected());
@@ -64,8 +65,9 @@ export default function Configuracion() {
 
   useEffect(() => {
     async function load() {
-      const extras = await getOpcionesExtra(user.uid);
-      setOpcionesExtra(extras);
+      const config = await getOpcionesConfig(user.uid);
+      setOpcionesExtra(config.extras);
+      setOpcionesOcultas(config.ocultas);
       try {
         const snap = await getDoc(doc(db, 'configuracion', user.uid));
         if (snap.exists()) {
@@ -100,6 +102,16 @@ export default function Configuracion() {
     setOpcionesExtra(updated);
     saveOpcionesExtra(user.uid, updated);
     setNuevaOpcion('');
+  }
+
+  function toggleOculta(preguntaId, opcion) {
+    const actuales = opcionesOcultas[preguntaId] || [];
+    const nuevas = actuales.includes(opcion)
+      ? actuales.filter(o => o !== opcion)
+      : [...actuales, opcion];
+    const updated = { ...opcionesOcultas, [preguntaId]: nuevas };
+    setOpcionesOcultas(updated);
+    saveOpcionesOcultas(user.uid, updated);
   }
 
   function removeOpcion(preguntaId, opcion) {
@@ -232,13 +244,26 @@ export default function Configuracion() {
                 {preguntaActiva === p.id && (
                   <div style={{ padding: '12px 14px', borderTop: '1px solid var(--teal-50)', background: 'white' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                      {/* Opciones predeterminadas con toggle ocultar */}
+                      {p.opciones && <p style={{ fontSize: 10, color: 'var(--slate-400)', marginBottom: 4, width: '100%' }}>Predeterminadas (toca para ocultar/mostrar):</p>}
+                      {(p.opciones || []).map(op => {
+                        const oculta = (opcionesOcultas[p.id] || []).includes(op);
+                        return (
+                          <span key={op} onClick={() => toggleOculta(p.id, op)}
+                            style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: oculta ? 'var(--slate-100)' : 'var(--teal-50)', border: `1px solid ${oculta ? 'var(--slate-200)' : 'var(--teal-100)'}`, fontSize: 12, color: oculta ? 'var(--slate-400)' : 'var(--teal-700)', cursor: 'pointer', textDecoration: oculta ? 'line-through' : 'none', opacity: oculta ? 0.6 : 1 }}>
+                            {op}
+                            <span style={{ fontSize: 10 }}>{oculta ? '👁' : '—'}</span>
+                          </span>
+                        );
+                      })}
+                      {(opcionesExtra[p.id] || []).length > 0 && <p style={{ fontSize: 10, color: 'var(--slate-400)', marginTop: 6, marginBottom: 4, width: '100%' }}>Añadidas por ti:</p>}
                       {(opcionesExtra[p.id] || []).map(op => (
                         <span key={op} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: 'var(--teal-50)', border: '1px solid var(--teal-100)', fontSize: 12, color: 'var(--teal-700)' }}>
                           {op}
                           <button onClick={() => removeOpcion(p.id, op)} style={{ background: 'none', border: 'none', color: 'var(--teal-500)', cursor: 'pointer', fontSize: 14, lineHeight: 1, padding: '0 0 0 2px' }}>×</button>
                         </span>
                       ))}
-                      {(opcionesExtra[p.id] || []).length === 0 && <p style={{ fontSize: 12, color: 'var(--slate-400)' }}>Sin opciones extra todavía</p>}
+                      {(opcionesExtra[p.id] || []).length === 0 && !(p.opciones?.length) && <p style={{ fontSize: 12, color: 'var(--slate-400)' }}>Sin opciones extra todavía</p>}
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <input className="input-field" value={nuevaOpcion} onChange={e => setNuevaOpcion(e.target.value)}
